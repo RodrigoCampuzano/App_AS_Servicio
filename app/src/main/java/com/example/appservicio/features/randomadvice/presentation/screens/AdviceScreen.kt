@@ -1,5 +1,10 @@
 package com.example.appservicio.features.randomadvice.presentation.screens
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.content.Intent
+import android.widget.Toast
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -7,10 +12,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Lightbulb
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -21,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -33,6 +36,7 @@ import com.example.appservicio.features.randomadvice.presentation.viewmodels.Adv
 @Composable
 fun AdviceScreen(viewModel: AdviceViewModel) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
 
     LaunchedEffect(Unit) {
         viewModel.fetchAdvice()
@@ -47,10 +51,7 @@ fun AdviceScreen(viewModel: AdviceViewModel) {
                         fontWeight = FontWeight.ExtraBold,
                         letterSpacing = 1.sp
                     )
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
+                }
             )
         }
     ) { paddingValues ->
@@ -111,10 +112,29 @@ fun AdviceScreen(viewModel: AdviceViewModel) {
                                     Spacer(modifier = Modifier.height(16.dp))
                                     Text("Buscando consejo...", style = MaterialTheme.typography.bodyMedium)
                                 }
-                                is AdviceUiState.Success -> AdviceView(
-                                    adviceEn = state.advice.adviceEn,
-                                    adviceEs = state.advice.adviceEs
-                                )
+                                is AdviceUiState.Success -> {
+                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                        AdviceView(
+                                            adviceEn = state.advice.adviceEn,
+                                            adviceEs = state.advice.adviceEs
+                                        )
+                                        Spacer(modifier = Modifier.height(16.dp))
+                                        Row(
+                                            horizontalArrangement = Arrangement.spacedBy(16.dp)
+                                        ) {
+                                            FilledTonalIconButton(onClick = { 
+                                                copyToClipboard(context, state.advice.adviceEs)
+                                            }) {
+                                                Icon(Icons.Default.ContentCopy, contentDescription = "Copiar")
+                                            }
+                                            FilledTonalIconButton(onClick = { 
+                                                shareAdvice(context, state.advice.adviceEs)
+                                            }) {
+                                                Icon(Icons.Default.Share, contentDescription = "Compartir")
+                                            }
+                                        }
+                                    }
+                                }
                                 is AdviceUiState.Error -> StateView(
                                     icon = Icons.Default.Warning,
                                     text = "¡Uy! ${state.message}",
@@ -147,6 +167,23 @@ fun AdviceScreen(viewModel: AdviceViewModel) {
     }
 }
 
+private fun copyToClipboard(context: Context, text: String) {
+    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+    val clip = ClipData.newPlainText("Consejo", text)
+    clipboard.setPrimaryClip(clip)
+    Toast.makeText(context, "Copiado al portapapeles", Toast.LENGTH_SHORT).show()
+}
+
+private fun shareAdvice(context: Context, text: String) {
+    val sendIntent: Intent = Intent().apply {
+        action = Intent.ACTION_SEND
+        putExtra(Intent.EXTRA_TEXT, "Mira este consejo: \"$text\"")
+        type = "text/plain"
+    }
+    val shareIntent = Intent.createChooser(sendIntent, "Compartir consejo mediante:")
+    context.startActivity(shareIntent)
+}
+
 @Composable
 fun AdviceView(adviceEn: String, adviceEs: String) {
     Column(
@@ -154,7 +191,7 @@ fun AdviceView(adviceEn: String, adviceEs: String) {
         verticalArrangement = Arrangement.Center
     ) {
         Icon(
-            imageVector = Icons.Default.Info,
+            imageVector = Icons.Default.FormatQuote,
             contentDescription = null,
             tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
             modifier = Modifier.size(40.dp)
@@ -176,12 +213,12 @@ fun AdviceView(adviceEn: String, adviceEs: String) {
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(16.dp))
         HorizontalDivider(
             modifier = Modifier.padding(horizontal = 32.dp),
             color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
         )
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         Text(
             text = "Español",
