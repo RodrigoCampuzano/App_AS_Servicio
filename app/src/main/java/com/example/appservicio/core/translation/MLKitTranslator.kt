@@ -1,15 +1,16 @@
-    package com.example.appservicio.core.translation
+package com.example.appservicio.core.translation
 
 import com.google.mlkit.common.model.DownloadConditions
 import com.google.mlkit.nl.translate.TranslateLanguage
 import com.google.mlkit.nl.translate.Translation
 import com.google.mlkit.nl.translate.TranslatorOptions
 import kotlinx.coroutines.tasks.await
+import javax.inject.Inject
 
 // La libreria de ML Kit una librería de Inteligencia Artificial que traduce o lee códigos de barras.
 // "Importante" Lo bueno es que puede funcionar "offline" (sin internet) una vez que baja el idioma.
 
-class MLKitTranslator : Translator {
+class MLKitTranslator @Inject constructor() : Translator {
 
     override suspend fun translate(text: String, sourceLang: String, targetLang: String): String {
         // En esete paso se usa para ver o poner que idiomas vamos a traducir de cual a cual

@@ -6,9 +6,10 @@ import com.example.appservicio.features.randomadvice.data.datasources.remote.map
 import com.example.appservicio.features.randomadvice.domain.entities.Advice
 import com.example.appservicio.features.randomadvice.domain.repositories.AdviceRepository
 import com.google.mlkit.nl.translate.TranslateLanguage
+import javax.inject.Inject
 
 // Esta es la implementación del repositorio, aquí es donde "procesamos" los datos
-class AdviceRepositoryImpl(
+class AdviceRepositoryImpl @Inject constructor(
     private val adviceApi: AdviceApi,
     private val translator: Translator
 ) : AdviceRepository {
